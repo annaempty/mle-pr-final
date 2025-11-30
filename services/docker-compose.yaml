@@ -1,0 +1,57 @@
+services:
+  recommendations_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: recommendations_service
+    environment:
+      MAIN_APP_PORT: 8000
+    command: uvicorn ml_service.recommendations_service:app --reload --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml_service:/app/ml_service
+    env_file:
+      - .env
+
+  features_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: features_service
+    environment:
+      MAIN_APP_PORT: 8010
+    command: uvicorn ml_service.features_service:app --reload --host 0.0.0.0 --port 8010
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./ml_service:/app/ml_service
+    env_file:
+      - .env
+
+  events_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: events_service
+    environment:
+      MAIN_APP_PORT: 8020
+    command: uvicorn ml_service.events_service:app --reload --host 0.0.0.0 --port 8020
+    ports:
+      - "8020:8020"
+    volumes:
+      - ./ml_service:/app/ml_service
+    env_file:
+      - .env
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - recommendations_service
+      - features_service
+      - events_service

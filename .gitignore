@@ -164,3 +164,7 @@ cython_debug/
 old/
 .vscode/
 .DS_Store
+
+/ALS_model
+/datasets
+/recommendations
