@@ -22,6 +22,8 @@ jmespath==1.0.1
 multidict==6.7.0
 numpy==2.2.6
 pandas==2.3.3
+prometheus-fastapi-instrumentator==7.1.0
+prometheus_client==0.23.1
 propcache==0.4.1
 pyarrow==22.0.0
 pydantic==2.12.5

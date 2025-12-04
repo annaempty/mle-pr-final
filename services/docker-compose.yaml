@@ -55,3 +55,12 @@ services:
       - recommendations_service
       - features_service
       - events_service
+  grafana:
+      image: grafana/grafana
+      env_file:
+      - ./.env
+      ports:
+      - 3000:3000
+      environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS}

@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 
 import pandas as pd
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter
 
 
 log = logger.getLogger("uvicorn.error")
@@ -14,6 +16,8 @@ logger.basicConfig(
 
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
 PATH = f's3://{S3_BUCKET_NAME}/final_pr/recommendations/similar.parquet'  
+
+simmilar_app_counter_empty_result = Counter("app_counter_empty_result", "Count of empty result simmilar items")
 
 
 class SimilarItems:
@@ -64,6 +68,7 @@ class SimilarItems:
         except KeyError:
             logger.error(f"Нет похожих объектов для item_id={item_id}")
             i2i = {"item_id_2": [], "score": []}
+            simmilar_app_counter_empty_result.inc()
         return i2i
 
 
@@ -83,6 +88,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="features", lifespan=lifespan)
 
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app)
 
 @app.post("/similar_items")
 async def recommendations(item_id: int, k: int = 5):

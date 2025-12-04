@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import logging as log
 from ml_service.events import EventStore
+from prometheus_fastapi_instrumentator import Instrumentator
 
 logger = log.getLogger("uvicorn.error")
 log.basicConfig(
@@ -15,6 +16,9 @@ events_store = EventStore()
 # создаём приложение FastAPI
 
 app = FastAPI(title="events")
+
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app)
 
 @app.post("/put")
 async def put(user_id: int, item_id: int):

@@ -3,6 +3,8 @@ import requests
 import pandas as pd
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter
 
 from ml_service.recomendation import Recommendations
 import logging as log
@@ -21,8 +23,9 @@ EVENT_STORE_PORT = 8020
 SIMILAR_ITEMS_PORT = 8010
 
 
+app_counter_online_rec = Counter("app_counter_online_rec", "Count of online recomendation")
+app_counter_offline_rec = Counter("app_counter_offline_rec", "Count of offline recomendation")
 rec_store = Recommendations()  
-
 
 # --- lifespan ---
 @asynccontextmanager
@@ -70,6 +73,8 @@ def blend_recommendations(online_recs, offline_recs, k):
 # --- FastAPI приложение ---
 app = FastAPI(title="recommendations", lifespan=lifespan)
 
+instrumentator = Instrumentator()
+instrumentator.instrument(app).expose(app)
 
 @app.post("/recommendations")
 async def recommendations(user_id: int, k: int = 100) -> dict:
@@ -97,9 +102,11 @@ async def recommendations(user_id: int, k: int = 100) -> dict:
         log.error(f"Произошла ошибка: {e}")
     
     if len(user_history) == 0:
-        log.info("Выдаем топ рекомендаций")
+        log.info("Выдаем офлайн рекомендации")
+        app_counter_offline_rec.inc()
         return {"recs": recs_offline}
-
+    
+    app_counter_online_rec.inc()
     online_recs = []
     for item_id in user_history:
         try:
